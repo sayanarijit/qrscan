@@ -7,7 +7,7 @@ https://user-images.githubusercontent.com/11632726/178779071-ad5ca7da-0fc3-48c1-
 ### Install
 
 ```bash
-cargo install --git https://github.com/sayanarijit/qrscan
+cargo install --locked --force qrscan
 ```
 
 ### Usage
