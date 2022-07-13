@@ -7,6 +7,7 @@ use image::io::Reader as ImageReader;
 use image::ColorType;
 use image::DynamicImage;
 use image::EncodableLayout;
+use image::ImageBuffer;
 use image::Rgba;
 use nokhwa::Camera;
 use nokhwa::CameraFormat;
@@ -28,6 +29,26 @@ struct Args {
     /// Path to the image to scan. If not specified, the system camera will be used.
     #[clap(value_parser)]
     image: Option<PathBuf>,
+
+    /// Preview the camera on the terminal (if compatible)
+    #[clap(long)]
+    preview: bool,
+
+    /// Preview display's x coordinate (works with --preview)
+    #[clap(long, default_value = "0")]
+    preview_x: u16,
+
+    /// Preview diaplay's y coordinate (works with --preview)
+    #[clap(long, default_value = "0")]
+    preview_y: i16,
+
+    /// Preview width (works with --preview)
+    #[clap(long)]
+    preview_w: Option<u32>,
+
+    /// Preview height (works with --preview)
+    #[clap(long)]
+    preview_h: Option<u32>,
 
     /// Print metadata
     #[clap(long, short)]
@@ -83,15 +104,30 @@ fn capture(args: &Args) -> Result<()> {
     let mut camera = Camera::new(0, Some(format))?;
     let mut spinner = 0;
 
+    let preview = viuer::Config {
+        x: args.preview_x,
+        y: args.preview_y,
+        restore_cursor: false,
+        transparent: false,
+        absolute_offset: true,
+        width: args.preview_w,
+        height: args.preview_h,
+        ..Default::default()
+    };
+
     camera.open_stream()?;
 
     loop {
         let frame = camera.frame()?;
         let image = DynamicImage::ImageRgb8(frame);
 
-        if print_image(args, image).is_err() {
-            eprint!("\rScanning via camera{}", PROGRESS[spinner]);
-            spinner = (spinner + 1) % 3;
+        if print_image(args, &image).is_err() {
+            if args.preview {
+                viuer::print(&image, &preview)?;
+            } else {
+                eprint!("\rScanning via camera{}", PROGRESS[spinner]);
+                spinner = (spinner + 1) % 3;
+            };
         } else {
             break;
         }
@@ -102,11 +138,25 @@ fn capture(args: &Args) -> Result<()> {
 
 fn scan(args: &Args, path: &PathBuf) -> Result<()> {
     let image = ImageReader::open(path)?.decode()?;
-
-    print_image(args, image)
+    print_image(args, &image)
 }
 
-fn print_image(args: &Args, image: DynamicImage) -> Result<()> {
+fn build_binary_image(
+    content: &str,
+    (dr, dg, db, da): (u8, u8, u8, u8),
+    (lr, lg, lb, la): (u8, u8, u8, u8),
+    quiet_zone: bool,
+) -> Result<ImageBuffer<Rgba<u8>, Vec<u8>>> {
+    let img = QrCode::new(content)?
+        .render::<Rgba<u8>>()
+        .dark_color(Rgba([dr, dg, db, da]))
+        .light_color(Rgba([lr, lg, lb, la]))
+        .quiet_zone(quiet_zone)
+        .build();
+    Ok(img)
+}
+
+fn print_image(args: &Args, image: &DynamicImage) -> Result<()> {
     let image = image.to_luma8();
     let mut img = rqrr::PreparedImage::prepare(image);
     let grids = img.detect_grids();
@@ -194,18 +244,12 @@ fn print_image(args: &Args, image: DynamicImage) -> Result<()> {
         }
 
         // RGB colors
-        let (dr, dg, db, da) = dark.parse::<Color>()?.to_linear_rgba_u8();
-        let (lr, lg, lb, la) = light.parse::<Color>()?.to_linear_rgba_u8();
+        let dark = dark.parse::<Color>()?.to_linear_rgba_u8();
+        let light = light.parse::<Color>()?.to_linear_rgba_u8();
 
         // PNG
         if let Some(path) = args.png.as_ref() {
-            let image = QrCode::new(&content)?
-                .render::<Rgba<u8>>()
-                .dark_color(Rgba([dr, dg, db, da]))
-                .light_color(Rgba([lr, lg, lb, la]))
-                .quiet_zone(!args.no_quiet_zone)
-                .build();
-
+            let image = build_binary_image(&content, dark, light, !args.no_quiet_zone)?;
             let bytes = image.as_bytes();
 
             let mut result: Vec<u8> = Default::default();
@@ -221,13 +265,7 @@ fn print_image(args: &Args, image: DynamicImage) -> Result<()> {
 
         // JPEG
         if let Some(path) = args.jpeg.as_ref() {
-            let image = QrCode::new(&content)?
-                .render::<Rgba<u8>>()
-                .dark_color(Rgba([dr, dg, db, da]))
-                .light_color(Rgba([lr, lg, lb, la]))
-                .quiet_zone(!args.no_quiet_zone)
-                .build();
-
+            let image = build_binary_image(&content, dark, light, !args.no_quiet_zone)?;
             let bytes = image.as_bytes();
 
             let mut result: Vec<u8> = Default::default();
@@ -242,7 +280,7 @@ fn print_image(args: &Args, image: DynamicImage) -> Result<()> {
         }
     } else {
         std::thread::sleep(Duration::from_millis(args.inverval));
-        anyhow::bail!("not found")
+        anyhow::bail!("failed to read")
     };
 
     Ok(())

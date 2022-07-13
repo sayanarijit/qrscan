@@ -32,10 +32,10 @@ cargo install --locked --force qrscan
 
 ### Usage
 
-Scan via the system camera
+Scan via the system camera with terminal preview
 
 ```bash
-qrscan
+qrscan --preview
 ```
 
 Scan a given image file
