@@ -1033,7 +1033,7 @@ dependencies = [
 
 [[package]]
 name = "qrscan"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "anyhow",
  "clap 3.2.10",
