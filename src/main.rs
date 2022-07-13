@@ -89,7 +89,7 @@ fn capture(args: &Args) -> Result<()> {
         let frame = camera.frame()?;
         let image = DynamicImage::ImageRgb8(frame);
 
-        if print_image(&args, image).is_err() {
+        if print_image(args, image).is_err() {
             eprint!("\rScanning via camera{}", PROGRESS[spinner]);
             spinner = (spinner + 1) % 3;
         } else {
@@ -103,7 +103,7 @@ fn capture(args: &Args) -> Result<()> {
 fn scan(args: &Args, path: &PathBuf) -> Result<()> {
     let image = ImageReader::open(path)?.decode()?;
 
-    print_image(&args, image)
+    print_image(args, image)
 }
 
 fn print_image(args: &Args, image: DynamicImage) -> Result<()> {
@@ -171,7 +171,7 @@ fn print_image(args: &Args, image: DynamicImage) -> Result<()> {
                 .into_bytes();
 
             if path.to_str() == Some("-") {
-                std::io::stdout().write(&image)?;
+                std::io::stdout().write_all(&image)?;
             } else {
                 std::fs::write(path, image)?
             }
@@ -187,7 +187,7 @@ fn print_image(args: &Args, image: DynamicImage) -> Result<()> {
                 .into_bytes();
 
             if path.to_str() == Some("-") {
-                std::io::stdout().write(&image)?;
+                std::io::stdout().write_all(&image)?;
             } else {
                 std::fs::write(path, image)?
             }
@@ -213,7 +213,7 @@ fn print_image(args: &Args, image: DynamicImage) -> Result<()> {
             encoder.encode(bytes, image.width(), image.height(), ColorType::Rgba8)?;
 
             if path.to_str() == Some("-") {
-                std::io::stdout().write(&result)?;
+                std::io::stdout().write_all(&result)?;
             } else {
                 std::fs::write(path, result)?
             }
@@ -235,7 +235,7 @@ fn print_image(args: &Args, image: DynamicImage) -> Result<()> {
             encoder.encode(bytes, image.width(), image.height(), ColorType::Rgba8)?;
 
             if path.to_str() == Some("-") {
-                std::io::stdout().write(&result)?;
+                std::io::stdout().write_all(&result)?;
             } else {
                 std::fs::write(path, result)?
             }
