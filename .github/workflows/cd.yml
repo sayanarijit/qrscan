@@ -115,3 +115,11 @@ jobs:
           overwrite: true
           tag: ${{ github.ref }}
           release_name: "Release v${{ env.RELEASE_VERSION }}"
+
+      - name: Releasing GPG signature
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            source.tar.gz.asc
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
