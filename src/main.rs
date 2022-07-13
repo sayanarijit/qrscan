@@ -167,6 +167,10 @@ fn print_image(args: &Args, image: &DynamicImage) -> Result<()> {
 
         // Ansi
         if args.qr {
+            if args.preview {
+                println!();
+            }
+
             let (dark, light) = if args.invert_colors {
                 (Dark, Light)
             } else {
@@ -185,7 +189,7 @@ fn print_image(args: &Args, image: &DynamicImage) -> Result<()> {
 
         // Metadata
         if args.metadata {
-            if args.qr {
+            if args.preview || args.qr {
                 println!()
             };
 
@@ -197,7 +201,7 @@ fn print_image(args: &Args, image: &DynamicImage) -> Result<()> {
 
         // Content
         if !args.no_content {
-            if args.qr || args.metadata {
+            if args.preview || args.qr || args.metadata {
                 println!();
             };
             println!("{}", content);
