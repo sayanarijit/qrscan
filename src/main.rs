@@ -1,14 +1,22 @@
 use anyhow::Result;
 use clap::Parser;
+use csscolorparser::Color;
+use image::codecs::jpeg::JpegEncoder;
+use image::codecs::png::PngEncoder;
 use image::io::Reader as ImageReader;
+use image::ColorType;
 use image::DynamicImage;
+use image::EncodableLayout;
+use image::Rgba;
 use nokhwa::Camera;
 use nokhwa::CameraFormat;
 use nokhwa::FrameFormat;
+use qrcode::render::svg;
 use qrcode::render::unicode::Dense1x2;
 use qrcode::render::unicode::Dense1x2::Dark;
 use qrcode::render::unicode::Dense1x2::Light;
 use qrcode::QrCode;
+use std::io::Write;
 use std::path::PathBuf;
 use std::time::Duration;
 
@@ -37,13 +45,37 @@ struct Args {
     #[clap(long, short, default_value = "200")]
     inverval: u64,
 
-    /// Invert the ascii QR code colors (works with --qr)
+    /// Invert the QR code colors
     #[clap(long)]
     invert_colors: bool,
 
-    /// Do not add quiet zone to the ascii QR code (works with --qr)
+    /// Specify the QR code foreground color (when printing image)
+    #[clap(long, default_value = "#000")]
+    fg: String,
+
+    /// Specify the QR code background color (when printing image)
+    #[clap(long, default_value = "#fff")]
+    bg: String,
+
+    /// Do not add quiet zone to the QR code
     #[clap(long)]
     no_quiet_zone: bool,
+
+    /// Print the QR code as ascii text to the given path
+    #[clap(long)]
+    ascii: Option<PathBuf>,
+
+    /// Print the QR code as svg image to the given path
+    #[clap(long)]
+    svg: Option<PathBuf>,
+
+    /// Print the QR code as png image to the given path
+    #[clap(long)]
+    png: Option<PathBuf>,
+
+    /// Print the QR code as jpeg image to the given path
+    #[clap(long)]
+    jpeg: Option<PathBuf>,
 }
 
 fn capture(args: &Args) -> Result<()> {
@@ -82,16 +114,16 @@ fn print_image(args: &Args, image: DynamicImage) -> Result<()> {
     if let Some(grid) = grids.first() {
         let (meta, content) = grid.decode()?;
         eprint!("\r                        \r");
-        if args.qr {
-            let qrcode = QrCode::new(&content)?;
 
+        // Ansi
+        if args.qr {
             let (dark, light) = if args.invert_colors {
                 (Dark, Light)
             } else {
                 (Light, Dark)
             };
 
-            let image = qrcode
+            let image = QrCode::new(&content)?
                 .render::<Dense1x2>()
                 .dark_color(dark)
                 .light_color(light)
@@ -101,6 +133,7 @@ fn print_image(args: &Args, image: DynamicImage) -> Result<()> {
             println!("{}", image);
         }
 
+        // Metadata
         if args.metadata {
             if args.qr {
                 println!()
@@ -112,11 +145,100 @@ fn print_image(args: &Args, image: DynamicImage) -> Result<()> {
             println!("Mask: {}", meta.mask);
         }
 
+        // Content
         if !args.no_content {
             if args.qr || args.metadata {
                 println!();
             };
             println!("{}", content);
+        }
+
+        // Output image colors
+        let (dark, light) = if args.invert_colors {
+            (&args.bg, &args.fg)
+        } else {
+            (&args.fg, &args.bg)
+        };
+
+        // SVG
+        if let Some(path) = args.svg.as_ref() {
+            let image = QrCode::new(&content)?
+                .render()
+                .dark_color(svg::Color(dark))
+                .light_color(svg::Color(light))
+                .quiet_zone(!args.no_quiet_zone)
+                .build()
+                .into_bytes();
+
+            if path.to_str() == Some("-") {
+                std::io::stdout().write(&image)?;
+            } else {
+                std::fs::write(path, image)?
+            }
+        }
+
+        // Ascii
+        if let Some(path) = args.ascii.as_ref() {
+            let image = QrCode::new(&content)?
+                .render::<char>()
+                .module_dimensions(2, 1)
+                .quiet_zone(!args.no_quiet_zone)
+                .build()
+                .into_bytes();
+
+            if path.to_str() == Some("-") {
+                std::io::stdout().write(&image)?;
+            } else {
+                std::fs::write(path, image)?
+            }
+        }
+
+        // RGB colors
+        let (dr, dg, db, da) = dark.parse::<Color>()?.to_linear_rgba_u8();
+        let (lr, lg, lb, la) = light.parse::<Color>()?.to_linear_rgba_u8();
+
+        // PNG
+        if let Some(path) = args.png.as_ref() {
+            let image = QrCode::new(&content)?
+                .render::<Rgba<u8>>()
+                .dark_color(Rgba([dr, dg, db, da]))
+                .light_color(Rgba([lr, lg, lb, la]))
+                .quiet_zone(!args.no_quiet_zone)
+                .build();
+
+            let bytes = image.as_bytes();
+
+            let mut result: Vec<u8> = Default::default();
+            let encoder = PngEncoder::new(&mut result);
+            encoder.encode(bytes, image.width(), image.height(), ColorType::Rgba8)?;
+
+            if path.to_str() == Some("-") {
+                std::io::stdout().write(&result)?;
+            } else {
+                std::fs::write(path, result)?
+            }
+        }
+
+        // JPEG
+        if let Some(path) = args.jpeg.as_ref() {
+            let image = QrCode::new(&content)?
+                .render::<Rgba<u8>>()
+                .dark_color(Rgba([dr, dg, db, da]))
+                .light_color(Rgba([lr, lg, lb, la]))
+                .quiet_zone(!args.no_quiet_zone)
+                .build();
+
+            let bytes = image.as_bytes();
+
+            let mut result: Vec<u8> = Default::default();
+            let mut encoder = JpegEncoder::new(&mut result);
+            encoder.encode(bytes, image.width(), image.height(), ColorType::Rgba8)?;
+
+            if path.to_str() == Some("-") {
+                std::io::stdout().write(&result)?;
+            } else {
+                std::fs::write(path, result)?
+            }
         }
     } else {
         std::thread::sleep(Duration::from_millis(args.inverval));
@@ -132,17 +254,20 @@ fn main() {
 
     if let Some(path) = args.image.as_ref() {
         if !path.exists() {
-            eprintln!("\r{}: No such file    ", path.display());
+            eprintln!("error: qrscan: {}: No such file", path.display());
             rc = 3;
         } else if path.is_dir() {
-            eprintln!("cannot scan {}: Is a directory", path.display());
+            eprintln!(
+                "error: qrscan: cannot scan {}: Is a directory",
+                path.display()
+            );
             rc = 2;
         } else if let Err(err) = scan(&args, path) {
-            eprintln!("{}", err);
+            eprintln!("error: qrscan: {}", err);
             rc = 1;
         }
     } else if let Err(err) = capture(&args) {
-        eprintln!("{}", err);
+        eprintln!("error: qrscan: {}", err);
         rc = 1;
     }
 

@@ -35,3 +35,13 @@ Also print QR code metadata
 ```bash
 qrscan </path/to/file> --metadata
 ```
+
+Print the QR code as image files
+
+```bash
+qrscan </path/to/file> --qr \
+  --svg /path/to/out.svg \
+  --png /path/to/out.png \
+  --jpeg /path/to/out.jpeg \
+  --ascii /path/to/out.ascii
+```
