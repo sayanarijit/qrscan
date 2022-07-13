@@ -21,27 +21,27 @@ qrscan
 Scan a given image file
 
 ```bash
-qrscan /path/to/image
+qrscan path/to/file
 ```
 
 Print the QR code on the terminal
 
 ```bash
-qrscan </path/to/file> --qr --no-content
+qrscan <path/to/file> --qr --no-content
 ```
 
 Also print QR code metadata
 
 ```bash
-qrscan </path/to/file> --metadata
+qrscan <path/to/file> --metadata
 ```
 
 Print the QR code as image files
 
 ```bash
-qrscan </path/to/file> --qr \
-  --svg /path/to/out.svg \
-  --png /path/to/out.png \
-  --jpeg /path/to/out.jpeg \
-  --ascii /path/to/out.ascii
+qrscan <path/to/file> --qr \
+  --svg path/to/out.svg \
+  --png path/to/out.png \
+  --jpeg path/to/out.jpeg \
+  --ascii path/to/out.ascii
 ```
