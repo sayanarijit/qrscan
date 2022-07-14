@@ -26,12 +26,12 @@ static PROGRESS: &[&str] = &[".  ", ".. ", "..."];
 #[derive(Parser, Debug)]
 #[clap(author, version, about)]
 struct Args {
-    /// Path to the image to scan. If not specified, the system camera will be used.
+    /// Path to the image to scan. If not specified, the system camera will be used
     #[clap(value_parser)]
     image: Option<PathBuf>,
 
     /// Preview the camera on the terminal (if compatible)
-    #[clap(long)]
+    #[clap(long, short)]
     preview: bool,
 
     /// Preview display's x coordinate (works with --preview)
@@ -70,11 +70,11 @@ struct Args {
     #[clap(long)]
     invert_colors: bool,
 
-    /// Specify the QR code foreground color (when printing image)
+    /// Specify the QR code foreground color (when exporting image)
     #[clap(long, default_value = "#000")]
     fg: String,
 
-    /// Specify the QR code background color (when printing image)
+    /// Specify the QR code background color (when exporting image)
     #[clap(long, default_value = "#fff")]
     bg: String,
 
@@ -82,19 +82,19 @@ struct Args {
     #[clap(long)]
     no_quiet_zone: bool,
 
-    /// Print the QR code as ascii text to the given path
+    /// Export the QR code as ascii text to the given path
     #[clap(long)]
     ascii: Option<PathBuf>,
 
-    /// Print the QR code as svg image to the given path
+    /// Export the QR code as svg image to the given path
     #[clap(long)]
     svg: Option<PathBuf>,
 
-    /// Print the QR code as png image to the given path
+    /// Export the QR code as png image to the given path
     #[clap(long)]
     png: Option<PathBuf>,
 
-    /// Print the QR code as jpeg image to the given path
+    /// Export the QR code as jpeg image to the given path
     #[clap(long)]
     jpeg: Option<PathBuf>,
 }
@@ -314,4 +314,122 @@ fn main() {
     }
 
     std::process::exit(rc);
+}
+
+#[cfg(test)]
+mod tests {
+    use std::path::PathBuf;
+
+    use assert_cmd::prelude::OutputOkExt;
+
+    fn qrscan() -> assert_cmd::Command {
+        assert_cmd::Command::cargo_bin("qrscan").unwrap()
+    }
+
+    pub struct TestFile {
+        pub path: PathBuf,
+    }
+
+    impl TestFile {
+        pub fn new(id: &str, ext: &str) -> Self {
+            let path = PathBuf::from(format!("test_{id}.{}", ext));
+            let header = format!("Accept: image/{}", ext);
+            let data = format!("foo {}", ext);
+
+            std::process::Command::new("curl")
+                .arg("https://qrcode.show")
+                .arg("-H")
+                .arg(&header)
+                .arg("-d")
+                .arg(&data)
+                .arg("-o")
+                .arg(&path)
+                .unwrap();
+
+            Self { path }
+        }
+    }
+
+    impl Drop for TestFile {
+        fn drop(&mut self) {
+            std::fs::remove_file(&self.path).unwrap();
+        }
+    }
+
+    #[test]
+    fn test_help() {
+        qrscan().arg("-h").assert().success();
+        qrscan().arg("--help").assert().success();
+
+        assert_eq!(
+            qrscan().arg("-h").output().unwrap(),
+            qrscan().arg("--help").output().unwrap()
+        );
+    }
+
+    #[test]
+    fn test_scan_jpeg_file() {
+        let file = TestFile::new("scan_jpeg", "jpeg");
+        qrscan()
+            .arg(&file.path)
+            .assert()
+            .success()
+            .stdout("foo jpeg\n");
+    }
+
+    #[test]
+    fn test_scan_png_file() {
+        let file = TestFile::new("scan_png", "png");
+        qrscan()
+            .arg(&file.path)
+            .assert()
+            .success()
+            .stdout("foo png\n");
+    }
+
+    #[test]
+    fn test_scan_no_content() {
+        let file = TestFile::new("scan_no_content", "png");
+        qrscan()
+            .arg(&file.path)
+            .arg("-n")
+            .assert()
+            .success()
+            .stdout("");
+
+        qrscan()
+            .arg(&file.path)
+            .arg("--no-content")
+            .assert()
+            .success()
+            .stdout("");
+    }
+
+    #[test]
+    fn test_export_files() {
+        let file = TestFile::new("scan_export_files", "png");
+        qrscan()
+            .arg(&file.path)
+            .arg("--ascii")
+            .arg("test.ascii")
+            .arg("--svg")
+            .arg("test.svg")
+            .arg("--jpeg")
+            .arg("test.jpeg")
+            .arg("--png")
+            .arg("test.png")
+            .assert()
+            .success()
+            .stdout("foo png\n");
+
+        assert!(PathBuf::from("test.ascii").exists());
+        assert!(PathBuf::from("test.svg").exists());
+        assert!(PathBuf::from("test.jpeg").exists());
+        assert!(PathBuf::from("test.png").exists());
+
+        std::fs::remove_file("test.ascii").unwrap();
+        std::fs::remove_file("test.svg").unwrap();
+        std::fs::remove_file("test.jpeg").unwrap();
+        std::fs::remove_file("test.png").unwrap();
+    }
 }

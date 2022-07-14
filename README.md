@@ -56,7 +56,7 @@ Also print QR code metadata
 qrscan <path/to/file> --metadata
 ```
 
-Print the QR code as image files
+Export the QR code as image files
 
 ```bash
 qrscan <path/to/file> --qr \
