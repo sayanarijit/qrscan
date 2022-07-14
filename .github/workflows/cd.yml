@@ -65,6 +65,7 @@ jobs:
           toolchain: ${{ matrix.TOOLCHAIN }}
           target: ${{ matrix.TARGET }}
           override: true
+
       - name: Build
         run: cargo build --release --locked --target ${{ matrix.TARGET }}
 
@@ -76,6 +77,7 @@ jobs:
           if [ "${{ matrix.OS }}" = "windows-2022" ]; then
             cp target/${{ matrix.TARGET }}/release/qrscan.exe release/
           else
+            strip target/${{ matrix.TARGET }}/release/qrscan
             cp target/${{ matrix.TARGET }}/release/qrscan release/
           fi
           mv release/ qrscan-${{ env.RELEASE_VERSION }}/
