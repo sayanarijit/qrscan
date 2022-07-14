@@ -17,6 +17,8 @@ use qrcode::render::unicode::Dense1x2;
 use qrcode::render::unicode::Dense1x2::Dark;
 use qrcode::render::unicode::Dense1x2::Light;
 use qrcode::QrCode;
+use std::io::Cursor;
+use std::io::Read;
 use std::io::Write;
 use std::path::PathBuf;
 use std::time::Duration;
@@ -27,6 +29,12 @@ static PROGRESS: &[&str] = &[".  ", ".. ", "..."];
 #[clap(author, version, about)]
 struct Args {
     /// Path to the image to scan. If not specified, the system camera will be used
+    ///
+    /// Examples:
+    ///
+    ///   qrscan /path/to/input.png
+    ///
+    ///   cat /path/to/input.png | qrscan -
     #[clap(value_parser)]
     image: Option<PathBuf>,
 
@@ -136,7 +144,19 @@ fn capture(args: &Args) -> Result<()> {
     Ok(())
 }
 
-fn scan(args: &Args, path: &PathBuf) -> Result<()> {
+fn scan_stdin(args: &Args) -> Result<()> {
+    let mut buf = vec![];
+    let mut stdin = std::io::stdin().lock();
+    stdin.read_to_end(&mut buf)?;
+
+    let image = ImageReader::new(Cursor::new(buf))
+        .with_guessed_format()?
+        .decode()?;
+
+    print_image(args, &image)
+}
+
+fn scan_file(args: &Args, path: &PathBuf) -> Result<()> {
     let image = ImageReader::open(path)?.decode()?;
     print_image(args, &image)
 }
@@ -295,7 +315,12 @@ fn main() {
     let mut rc = 0;
 
     if let Some(path) = args.image.as_ref() {
-        if !path.exists() {
+        if path.to_str() == Some("-") {
+            if let Err(err) = scan_stdin(&args) {
+                eprintln!("error: qrscan: {}", err);
+                rc = 1;
+            }
+        } else if !path.exists() {
             eprintln!("error: qrscan: {}: No such file", path.display());
             rc = 3;
         } else if path.is_dir() {
@@ -304,7 +329,7 @@ fn main() {
                 path.display()
             );
             rc = 2;
-        } else if let Err(err) = scan(&args, path) {
+        } else if let Err(err) = scan_file(&args, path) {
             eprintln!("error: qrscan: {}", err);
             rc = 1;
         }
@@ -360,16 +385,11 @@ mod tests {
     fn test_help() {
         qrscan().arg("-h").assert().success();
         qrscan().arg("--help").assert().success();
-
-        assert_eq!(
-            qrscan().arg("-h").output().unwrap(),
-            qrscan().arg("--help").output().unwrap()
-        );
     }
 
     #[test]
     fn test_scan_jpeg_file() {
-        let file = TestFile::new("scan_jpeg", "jpeg");
+        let file = TestFile::new("scan_jpeg_file", "jpeg");
         qrscan()
             .arg(&file.path)
             .assert()
@@ -379,9 +399,21 @@ mod tests {
 
     #[test]
     fn test_scan_png_file() {
-        let file = TestFile::new("scan_png", "png");
+        let file = TestFile::new("scan_png_file", "png");
         qrscan()
             .arg(&file.path)
+            .assert()
+            .success()
+            .stdout("foo png\n");
+    }
+
+    #[test]
+    fn test_scan_from_stdin() {
+        let file = TestFile::new("scan_from_stdin", "png");
+        qrscan()
+            .arg("-")
+            .pipe_stdin(&file.path)
+            .unwrap()
             .assert()
             .success()
             .stdout("foo png\n");
@@ -407,7 +439,7 @@ mod tests {
 
     #[test]
     fn test_export_files() {
-        let file = TestFile::new("scan_export_files", "png");
+        let file = TestFile::new("export_files", "png");
         qrscan()
             .arg(&file.path)
             .arg("--ascii")
