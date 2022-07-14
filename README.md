@@ -69,7 +69,3 @@ qrscan <path/to/file> --qr \
   --jpeg path/to/out.jpeg \
   --ascii path/to/out.ascii
 ```
-
-## Packaging
-
-<a href="https://repology.org/project/qrscan/versions"><img src="https://repology.org/badge/vertical-allrepos/qrscan.svg" /></a>
