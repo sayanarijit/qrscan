@@ -42,6 +42,10 @@ Scan a given image file
 
 ```bash
 qrscan path/to/file
+
+# Or read from stdin
+
+cat /path/to/file | qrscan -
 ```
 
 Print the QR code on the terminal
