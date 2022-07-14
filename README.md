@@ -69,3 +69,11 @@ qrscan <path/to/file> --qr \
   --jpeg path/to/out.jpeg \
   --ascii path/to/out.ascii
 ```
+
+### Some Usage Examples
+
+Capture a screenshot of a selected area using [ImageMagic](https://imagemagick.org/index.php) and scan the QR code.
+
+```bash
+import png:- | qrscan -
+```
