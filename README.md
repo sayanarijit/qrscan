@@ -30,6 +30,8 @@ https://user-images.githubusercontent.com/11632726/178779071-ad5ca7da-0fc3-48c1-
 cargo install --locked --force qrscan
 ```
 
+Or [download the appropriate binary from the latest release](https://github.com/sayanarijit/qrscan/releases).
+
 ### Usage
 
 Scan via the system camera with terminal preview
