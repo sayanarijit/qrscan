@@ -79,3 +79,7 @@ Capture a screenshot of a selected area using [ImageMagic](https://imagemagick.o
 ```bash
 import png:- | qrscan -
 ```
+
+### Introductions & Reviews
+
+- [Scan QR codes right from your Linux Terminal ~ The Lunduke Journal](https://lunduke.substack.com/p/scan-qr-codes-right-from-your-linux)
