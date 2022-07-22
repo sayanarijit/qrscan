@@ -29,6 +29,7 @@ https://user-images.githubusercontent.com/11632726/178779071-ad5ca7da-0fc3-48c1-
 #### Scoop
 
 ```powershell
+scoop bucket add extras
 scoop install qrscan
 ```
 
