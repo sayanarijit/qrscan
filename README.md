@@ -26,11 +26,21 @@ https://user-images.githubusercontent.com/11632726/178779071-ad5ca7da-0fc3-48c1-
 
 ### Install
 
+#### Scoop
+
+```powershell
+scoop install qrscan
+```
+
+#### Cargo
+
 ```bash
 cargo install --locked --force qrscan
 ```
 
-Or [download the appropriate binary from the latest release](https://github.com/sayanarijit/qrscan/releases).
+#### Pre-built binaries
+
+Download the appropriate binary from the [latest release](https://github.com/sayanarijit/qrscan/releases/latest).
 
 ### Usage
 
