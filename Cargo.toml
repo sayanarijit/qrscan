@@ -1,7 +1,7 @@
 [package]
 name = "qrscan"
 description = "Scan a QR code in the terminal using the system camera or a given image"
-version = "0.1.6"
+version = "0.1.7"
 edition = "2021"
 authors = ['Arijit Basu <hi@arijitbasu.in>']
 license = 'MIT'
@@ -16,11 +16,11 @@ qrcode = { version = "0.12.0", default-features = false, features = [
   "svg",
   "image",
 ] }
-image = "0.23.0"
+image = "0.23.14"
 rqrr = "0.4.0"
-clap = { version = "3.2.10", features = ["derive"] }
-anyhow = "1.0.58"
-csscolorparser = "0.6.0"
+clap = { version = "3.2.22", features = ["derive"] }
+anyhow = "1.0.65"
+csscolorparser = "0.6.2"
 viuer = "0.5.3"
 
 [target.'cfg(all(unix, not(macos)))'.dependencies]
