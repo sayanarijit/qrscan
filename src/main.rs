@@ -23,7 +23,7 @@ use std::io::Write;
 use std::path::PathBuf;
 use std::time::Duration;
 
-static PROGRESS: &[&str] = &[".  ", ".. ", "..."];
+static PROGRESS: &[&str] = &["   ", ".  ", ".. ", "..."];
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about)]
@@ -131,10 +131,10 @@ fn capture(args: &Args) -> Result<()> {
 
         if print_image(args, &image).is_err() {
             if args.preview {
-                viuer::print(&image, &preview)?;
+                viuer::print(&image.fliph(), &preview)?;
             } else {
                 eprint!("\rScanning via camera{}", PROGRESS[spinner]);
-                spinner = (spinner + 1) % 3;
+                spinner = (spinner + 1) % 4;
             };
         } else {
             break;
