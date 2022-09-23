@@ -26,6 +26,8 @@ https://user-images.githubusercontent.com/11632726/178779071-ad5ca7da-0fc3-48c1-
 
 ### Install
 
+[![Packaging status](https://repology.org/badge/vertical-allrepos/qrscan.svg)](https://repology.org/project/qrscan/versions)
+
 #### Scoop
 
 ```powershell
