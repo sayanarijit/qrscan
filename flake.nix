@@ -1,5 +1,5 @@
 {
-  description = "Scan a QR code in the terminal using the system camera or a given image";
+  description = "qrscan - Scan a QR code in the terminal using the system camera or a given image";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs";
@@ -30,10 +30,6 @@
           qrscan = pkgs.rustPlatform.buildRustPackage rec {
             name = "qrscan";
             src = ./.;
-
-            LIBCLANG_PATH = "${pkgs.llvmPackages.libclang}/lib";
-
-            buildInputs = [ pkgs.stdenv.cc.libc ];
             cargoLock = {
               lockFile = ./Cargo.lock;
             };
@@ -57,6 +53,7 @@
         {
           default = pkgs.mkShell {
             RUST_BACKTRACE = 1;
+            LIBCLANG_PATH = "${pkgs.llvmPackages.libclang.lib}/lib";
 
             buildInputs = devRequirements;
             packages = devRequirements;
