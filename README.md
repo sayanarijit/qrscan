@@ -38,6 +38,7 @@ scoop install qrscan
 #### Cargo
 
 ```bash
+# On Ubuntu, first install libclang-dev (apt-get install libclang-dev)
 cargo install --locked --force qrscan
 ```
 
