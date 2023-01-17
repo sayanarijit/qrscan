@@ -37,6 +37,7 @@
             name = "qrscan";
             src = ./.;
             cargoLock = { lockFile = ./Cargo.lock; };
+            nativeBuildInputs = [ pkgs.rustPlatform.bindgenHook ];
           };
         });
       defaultPackage = forAllSystems (system: self.packages.${system}.qrscan);
@@ -56,10 +57,10 @@
         {
           default = pkgs.mkShell {
             RUST_BACKTRACE = 1;
-            LIBCLANG_PATH = "${pkgs.llvmPackages.libclang.lib}/lib";
+            LIBCLANG_PATH = "${pkgs.llvmPackages.libclang}/lib";
 
             buildInputs = devRequirements;
-            nativeBuildInputs = [ pkgs.rustPlatform.bindgenHook ];
+            packages = devRequirements;
           };
         });
     };
