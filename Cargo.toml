@@ -39,3 +39,4 @@ panic = 'abort'
 
 [dev-dependencies]
 assert_cmd = "2.0.4"
+
