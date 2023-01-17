@@ -1,5 +1,6 @@
 {
-  description = "qrscan - Scan a QR code in the terminal using the system camera or a given image";
+  description =
+    "qrscan - Scan a QR code in the terminal using the system camera or a given image";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs";
@@ -19,23 +20,25 @@
         "aarch64-linux"
         "aarch64-darwin"
       ];
-      forAllSystems = f: builtins.listToAttrs (map (name: { inherit name; value = f name; }) systems);
+      forAllSystems = f:
+        builtins.listToAttrs (map
+          (name: {
+            inherit name;
+            value = f name;
+          })
+          systems);
     in
     {
       packages = forAllSystems (system:
-        let
-          pkgs = import nixpkgs { inherit system; };
+        let pkgs = import nixpkgs { inherit system; };
         in
         {
           qrscan = pkgs.rustPlatform.buildRustPackage rec {
             name = "qrscan";
             src = ./.;
-            cargoLock = {
-              lockFile = ./Cargo.lock;
-            };
+            cargoLock = { lockFile = ./Cargo.lock; };
           };
-        }
-      );
+        });
       defaultPackage = forAllSystems (system: self.packages.${system}.qrscan);
       devShells = forAllSystems (system:
         let
@@ -44,8 +47,8 @@
             gcc
             gnumake
             clippy
-            rustc
             cargo
+            rustc
             rustfmt
             rust-analyzer
           ];
@@ -56,9 +59,8 @@
             LIBCLANG_PATH = "${pkgs.llvmPackages.libclang.lib}/lib";
 
             buildInputs = devRequirements;
-            packages = devRequirements;
+            nativeBuildInputs = [ pkgs.rustPlatform.bindgenHook ];
           };
-        }
-      );
+        });
     };
 }
