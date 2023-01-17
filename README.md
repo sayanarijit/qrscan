@@ -42,6 +42,12 @@ scoop install qrscan
 cargo install --locked --force qrscan
 ```
 
+#### Nix Flake
+
+```bash
+nix profile install github:sayanarijit/qrscan
+```
+
 #### Pre-built binaries
 
 Download the appropriate binary from the [latest release](https://github.com/sayanarijit/qrscan/releases/latest).
