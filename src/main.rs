@@ -363,6 +363,7 @@ mod tests {
 
             std::process::Command::new("curl")
                 .arg("https://qrcode.show")
+                .arg("-k")
                 .arg("-H")
                 .arg(&header)
                 .arg("-d")
