@@ -478,4 +478,23 @@ mod tests {
         std::fs::remove_file("test.jpeg").unwrap();
         std::fs::remove_file("test.png").unwrap();
     }
+
+    #[test]
+    fn test_err_1() {
+        qrscan().arg("-").assert().failure().code(1);
+    }
+
+    #[test]
+    fn test_err_2() {
+        qrscan().arg("/tmp").assert().failure().code(2);
+    }
+
+    #[test]
+    fn test_err_3() {
+        qrscan()
+            .arg("/foo/bar/doesntexists")
+            .assert()
+            .failure()
+            .code(3);
+    }
 }
