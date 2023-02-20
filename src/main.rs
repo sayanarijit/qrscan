@@ -204,7 +204,7 @@ fn print_image(args: &Args, image: &DynamicImage) -> Result<()> {
                 .quiet_zone(!args.no_quiet_zone)
                 .build();
 
-            println!("{}", image);
+            println!("{image}");
         }
 
         // Metadata
@@ -224,7 +224,7 @@ fn print_image(args: &Args, image: &DynamicImage) -> Result<()> {
             if args.preview || args.qr || args.metadata {
                 println!();
             };
-            println!("{}", content);
+            println!("{content}");
         }
 
         // Output image colors
@@ -317,7 +317,7 @@ fn main() {
     if let Some(path) = args.image.as_ref() {
         if path.to_str() == Some("-") {
             if let Err(err) = scan_stdin(&args) {
-                eprintln!("error: qrscan: {}", err);
+                eprintln!("error: qrscan: {err}");
                 rc = 1;
             }
         } else if !path.exists() {
@@ -330,11 +330,11 @@ fn main() {
             );
             rc = 2;
         } else if let Err(err) = scan_file(&args, path) {
-            eprintln!("error: qrscan: {}", err);
+            eprintln!("error: qrscan: {err}");
             rc = 1;
         }
     } else if let Err(err) = capture(&args) {
-        eprintln!("error: qrscan: {}", err);
+        eprintln!("error: qrscan: {err}");
         rc = 1;
     }
 
