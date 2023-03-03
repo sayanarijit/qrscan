@@ -15,11 +15,11 @@ use nokhwa::utils::CameraIndex;
 use nokhwa::utils::RequestedFormat;
 use nokhwa::utils::RequestedFormatType;
 use nokhwa::Camera;
-use qrcode::render::svg;
-use qrcode::render::unicode::Dense1x2;
-use qrcode::render::unicode::Dense1x2::Dark;
-use qrcode::render::unicode::Dense1x2::Light;
-use qrcode::QrCode;
+use qrencode::render::svg;
+use qrencode::render::unicode::Dense1x2;
+use qrencode::render::unicode::Dense1x2::Dark;
+use qrencode::render::unicode::Dense1x2::Light;
+use qrencode::QrCode;
 use std::io::Cursor;
 use std::io::Read;
 use std::io::Write;
@@ -255,7 +255,7 @@ fn print_image(args: &Args, image: &DynamicImage) -> Result<()> {
             if path.to_str() == Some("-") {
                 std::io::stdout().write_all(&image)?;
             } else {
-                std::fs::write(path, image)?
+                std::fs::write(path, &image)?
             }
         }
 
@@ -271,7 +271,7 @@ fn print_image(args: &Args, image: &DynamicImage) -> Result<()> {
             if path.to_str() == Some("-") {
                 std::io::stdout().write_all(&image)?;
             } else {
-                std::fs::write(path, image)?
+                std::fs::write(path, &image)?
             }
         }
 

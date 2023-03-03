@@ -12,10 +12,10 @@ keywords = ['qrcode', 'qr', 'scan', 'reader', 'scanner']
 categories = ['command-line-interface', 'command-line-utilities']
 
 [dependencies]
-qrcode = { git = "https://github.com/sayanarijit/qrcode-rust", default-features = false, features = [ "svg", "image" ] }
+qrencode = "0.14.0"
 image = "0.24.5"
 rqrr = "0.6.0"
-clap = { version = "4.1.6", features = ["derive"] }
+clap = { version = "4.1.8", features = ["derive"] }
 anyhow = "1.0.69"
 csscolorparser = "0.6.2"
 viuer = "0.6.2"
