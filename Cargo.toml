@@ -21,7 +21,6 @@ csscolorparser = "0.6.2"
 viuer = "0.6.2"
 nokhwa = { version = "0.10.3", features = ["input-native"] }
 
-
 [profile.release]
 lto = true
 codegen-units = 1

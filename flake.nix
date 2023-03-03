@@ -38,6 +38,7 @@
             src = ./.;
             cargoLock = { lockFile = ./Cargo.lock; };
             nativeBuildInputs = [ pkgs.rustPlatform.bindgenHook ];
+            doCheck = false; # No access to internet
           };
         });
       defaultPackage = forAllSystems (system: self.packages.${system}.qrscan);
