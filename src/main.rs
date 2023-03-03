@@ -8,15 +8,18 @@ use image::ColorType;
 use image::DynamicImage;
 use image::EncodableLayout;
 use image::ImageBuffer;
+use image::ImageEncoder;
 use image::Rgba;
+use nokhwa::pixel_format::RgbFormat;
+use nokhwa::utils::CameraIndex;
+use nokhwa::utils::RequestedFormat;
+use nokhwa::utils::RequestedFormatType;
 use nokhwa::Camera;
-use nokhwa::CameraFormat;
-use nokhwa::FrameFormat;
-use qrcode::render::svg;
-use qrcode::render::unicode::Dense1x2;
-use qrcode::render::unicode::Dense1x2::Dark;
-use qrcode::render::unicode::Dense1x2::Light;
-use qrcode::QrCode;
+use qrencode::render::svg;
+use qrencode::render::unicode::Dense1x2;
+use qrencode::render::unicode::Dense1x2::Dark;
+use qrencode::render::unicode::Dense1x2::Light;
+use qrencode::QrCode;
 use std::io::Cursor;
 use std::io::Read;
 use std::io::Write;
@@ -108,8 +111,12 @@ struct Args {
 }
 
 fn capture(args: &Args) -> Result<()> {
-    let format = CameraFormat::new_from(640, 480, FrameFormat::MJPEG, 30);
-    let mut camera = Camera::new(0, Some(format))?;
+    let index = CameraIndex::Index(0);
+    // let format = CameraFormat::new_from(640, 480, FrameFormat::YUYV, 30);
+    let formattyp = RequestedFormatType::None;
+    let requested = RequestedFormat::new::<RgbFormat>(formattyp);
+
+    let mut camera = Camera::new(index, requested)?;
     let mut spinner = 0;
 
     let preview = viuer::Config {
@@ -127,7 +134,8 @@ fn capture(args: &Args) -> Result<()> {
 
     loop {
         let frame = camera.frame()?;
-        let image = DynamicImage::ImageRgb8(frame);
+        let image = frame.decode_image::<RgbFormat>()?;
+        let image = DynamicImage::ImageRgb8(image);
 
         if print_image(args, &image).is_err() {
             if args.preview {
@@ -169,9 +177,9 @@ fn build_binary_image(
 ) -> Result<ImageBuffer<Rgba<u8>, Vec<u8>>> {
     let img = QrCode::new(content)?
         .render::<Rgba<u8>>()
+        .quiet_zone(quiet_zone)
         .dark_color(Rgba([dr, dg, db, da]))
         .light_color(Rgba([lr, lg, lb, la]))
-        .quiet_zone(quiet_zone)
         .build();
     Ok(img)
 }
@@ -247,7 +255,7 @@ fn print_image(args: &Args, image: &DynamicImage) -> Result<()> {
             if path.to_str() == Some("-") {
                 std::io::stdout().write_all(&image)?;
             } else {
-                std::fs::write(path, image)?
+                std::fs::write(path, &image)?
             }
         }
 
@@ -263,7 +271,7 @@ fn print_image(args: &Args, image: &DynamicImage) -> Result<()> {
             if path.to_str() == Some("-") {
                 std::io::stdout().write_all(&image)?;
             } else {
-                std::fs::write(path, image)?
+                std::fs::write(path, &image)?
             }
         }
 
@@ -278,7 +286,12 @@ fn print_image(args: &Args, image: &DynamicImage) -> Result<()> {
 
             let mut result: Vec<u8> = Default::default();
             let encoder = PngEncoder::new(&mut result);
-            encoder.encode(bytes, image.width(), image.height(), ColorType::Rgba8)?;
+            encoder.write_image(
+                bytes,
+                image.width(),
+                image.height(),
+                ColorType::Rgba8,
+            )?;
 
             if path.to_str() == Some("-") {
                 std::io::stdout().write_all(&result)?;
@@ -464,5 +477,24 @@ mod tests {
         std::fs::remove_file("test.svg").unwrap();
         std::fs::remove_file("test.jpeg").unwrap();
         std::fs::remove_file("test.png").unwrap();
+    }
+
+    #[test]
+    fn test_err_1() {
+        qrscan().arg("-").assert().failure().code(1);
+    }
+
+    #[test]
+    fn test_err_2() {
+        qrscan().arg("/tmp").assert().failure().code(2);
+    }
+
+    #[test]
+    fn test_err_3() {
+        qrscan()
+            .arg("/foo/bar/doesntexists")
+            .assert()
+            .failure()
+            .code(3);
     }
 }
