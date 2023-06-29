@@ -100,13 +100,13 @@ jobs:
           command: fmt
           args: --all -- --check --verbose
 
-  # audit:
-  #   name: Audit check
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v2
-  #     - name: Run cargo-audit
-  #       uses: actions-rs/audit-check@v1
-  #       with:
-  #         token: ${{ secrets.GITHUB_TOKEN }}
+  audit:
+    name: Audit check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Run cargo-audit
+        uses: actions-rs/audit-check@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
