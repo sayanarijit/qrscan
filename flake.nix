@@ -53,6 +53,8 @@
             rustc
             rustfmt
             rust-analyzer
+            openssl
+            pkg-config
           ];
         in
         {
