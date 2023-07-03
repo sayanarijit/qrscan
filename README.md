@@ -42,7 +42,15 @@ scoop install qrscan
 cargo install --locked --force qrscan
 ```
 
-#### Nix Flake
+#### Nix
+
+##### Nixpkgs
+
+```bash
+nix-env -f https://github.com/NixOS/nixpkgs/tarball/master -iA qrscan
+```
+
+##### Flake
 
 ```bash
 nix profile install github:sayanarijit/qrscan
